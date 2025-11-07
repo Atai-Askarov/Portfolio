@@ -1,0 +1,6 @@
+export const BirdState = {
+    FLOCKING: 'FLOCKING',
+    GRID_FORMATION: 'GRID_FORMATION',
+    RESUME_FETCH: 'RESUME_FETCH',
+    IDLE: 'IDLE'
+};
