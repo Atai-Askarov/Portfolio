@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "hyphen": "^1.14.1",
@@ -17,12 +19,12 @@
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.2",
     "three": "^0.138.3",
-    "three-mesh-ui": "^6.5.4",
     "three-stdlib": "^2.36.0",
     "troika-3d-text": "^0.52.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^1.0.7",
+    "gh-pages": "^6.3.0",
     "vite": "^2.8.0"
   }
 }
