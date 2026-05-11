@@ -19,34 +19,29 @@ export function createClone(model) {
   return { mesh: clonedSceneMesh, mixer: animationMixer };
 }
  // optional gap between papers
-export function getGroupedGridPositions(center, num, offset){ 
+export function getGroupedGridPositions(center, num, offset) {
   const paperSize = 65;
-  const gridPositions = []
-
-  const cx =  center.position.x + 30;
-  const cy = center.position.y - paperSize/2;
+  const gridPositions = [];
+  const cx = center.position.x + 30;
+  const cy = center.position.y - paperSize / 2;
   const cz = center.position.z - 200;
-  
-  let totalWidth = num * paperSize * 2 + offset * (num - 1);
+  const totalWidth = num * paperSize * 2 + offset * (num - 1);
+  let startX = cx - totalWidth / 2;
 
-    let startX = cx - totalWidth/2
-    for(let iteration = 0; iteration < num; iteration++){
-      for(let i = 0; i < 4; i +=2){
-        for(let j = 0; j < 4; j +=2){
-          const newVector = new THREE.Vector3(
-            startX + paperSize/2 * i,
-            cy + paperSize/2 * j,
-            cz
-          )
-          gridPositions.push(newVector);
+  for (let iteration = 0; iteration < num; iteration++) {
+    for (let i = 0; i < 4; i += 2) {
+      for (let j = 0; j < 4; j += 2) {
+        gridPositions.push(
+          new THREE.Vector3(startX + (paperSize / 2) * i, cy + (paperSize / 2) * j, cz)
+        );
       }
-      }
-      startX += paperSize * 2 + offset;
     }
+    startX += paperSize * 2 + offset;
+  }
 
-    return gridPositions
+  return gridPositions;
 }
-export function getGridPositions(center, rows, cols, separateColumn = true, paperSize = 65, gap = 0.09) {
+export function getGridPositions(center, rows, cols, paperSize = 65, gap = 0.09) {
   const mainGridPositions = [];
   const separateColumnPositions = [];
   const yOffset = 30;
@@ -74,25 +69,7 @@ export function getGridPositions(center, rows, cols, separateColumn = true, pape
     }
   }
 
-  if (separateColumn){
-    const columnOffset = totalWidth + paperSize; // 2 paper widths away from main grid
-
-    // Add separate column positions
-    const separateColumnX = startX + columnOffset;
-    for (let r = 0; r < rows; r++) {
-      separateColumnPositions.push(new THREE.Vector3(
-        separateColumnX,
-        startY + r * (paperSize + gap) - yOffset,
-        cz - 200
-      ));
-    }
-    return {mainGridPositions: mainGridPositions,
-          columnPositions: separateColumnPositions
-  };
-  }
-
-  return {mainGridPositions: mainGridPositions
-  };
+  return mainGridPositions;
 }
 
 export function getSquareGridPositions(center, squareSize = 65, screenWidth = 1920) {
@@ -130,91 +107,67 @@ export function getSquareGridPositions(center, squareSize = 65, screenWidth = 19
   return squares;
 }
 
-function createDebugDot(position) {
-  const geometry = new THREE.SphereGeometry(3, 32, 32); // Increased size from 5 to 20
-  const material = new THREE.MeshBasicMaterial({ 
-    color: 0xff0000,
-    transparent: true,
-    opacity: 0.8,
-    side: THREE.DoubleSide,
-    depthTest: false // This ensures dots are always visible
-  });
-  const dot = new THREE.Mesh(geometry, material);
-  dot.position.copy(position);
-  dot.renderOrder = 999; // This will render the dot on top of other objects
-  return dot;
+function boundingBoxesForGroupedPositions(camera, groupCount, offset) {
+  const positions = getGroupedGridPositions(camera, groupCount, offset);
+  const groupSize = 4;
+  const groups = [];
+  for (let i = 0; i < positions.length; i += groupSize) {
+    const subgroup = positions.slice(i, i + groupSize);
+    groups.push(getBoundingBoxFromPositions(subgroup));
+  }
+  return { positions, gridDimensions: groups };
 }
-
 
 export function formPaperGrid(camera, birds, rows = 3, cols = 4, scene = null, viewPortState) {
   let combinedPositions = null;
   let positions = null;
   let gridDimensions = null;
-  //console.log(viewPortState)
-  if (viewPortState){
-  switch (viewPortState) {
-          case "HERO":
-            // Custom logic for hero section
-            const allPositions = getGridPositions(camera, rows, cols);
-            
-            //console.log(allPositions)
-            positions = allPositions.mainGridPositions;
-            combinedPositions = allPositions.mainGridPositions.concat(allPositions.columnPositions);
-            gridDimensions = [getBoundingBoxFromPositions(positions)];
-            break;
-          case "ABOUT":
-            positions = getGridPositions(camera, rows, cols,false).mainGridPositions;
-            combinedPositions = positions; 
-            gridDimensions = [getBoundingBoxFromPositions(positions)];
-            break;
-          case "PROJECT":
-            // Custom logic for project section
-            positions = getGroupedGridPositions(camera, 4, 15)
-            const groupSizee = 4;
-            const groupse = [];
 
-            for (let i = 0; i < positions.length; i += groupSizee) {
-                const subgroup = positions.slice(i, i + groupSizee);
-                const boundingBoxSubgroup = getBoundingBoxFromPositions(subgroup);
-                groupse.push(boundingBoxSubgroup);
-                }
-            gridDimensions = groupse;
-            combinedPositions = positions; 
-            break;
-          case "SKILLS":
-            // Custom logic for skills section
-            //positions = getGridPositions(camera, rows, cols,false).mainGridPositions;
-            positions = getGroupedGridPositions(camera, 4, 20)
-            const groupSize = 4;
-            const groups = [];
+  if (viewPortState) {
+    switch (viewPortState) {
+      case 'HERO': {
+        // Remove the right column by setting separateColumn to false
+        const positions = getGridPositions(camera, rows, cols);
+        combinedPositions = positions;
+        gridDimensions = [getBoundingBoxFromPositions(positions)];
+        break;
+      }
+      case 'ABOUT':
+      case 'CONTACT': {
+        positions = getGridPositions(camera, rows, cols);
+        combinedPositions = positions;
+        gridDimensions = [getBoundingBoxFromPositions(positions)];
+        break;
+      }
+      case 'PROJECT': {
+        const grouped = boundingBoxesForGroupedPositions(camera, 4, 15);
+        positions = grouped.positions;
+        combinedPositions = positions;
+        gridDimensions = grouped.gridDimensions;
+        break;
+      }
+      case 'SKILLS': {
+        const grouped = boundingBoxesForGroupedPositions(camera, 4, 20);
+        positions = grouped.positions;
+        combinedPositions = positions;
+        gridDimensions = grouped.gridDimensions;
+        break;
+      }
+      default:
+        break;
+    }
+  }
 
-            for (let i = 0; i < positions.length; i += groupSize) {
-                const subgroup = positions.slice(i, i + groupSize);
-                const boundingBoxSubgroup = getBoundingBoxFromPositions(subgroup);
-                groups.push(boundingBoxSubgroup);
-                }
-            gridDimensions = groups;
-            combinedPositions = positions; 
-            break;
-          case "CONTACT":
-            // Custom logic for contact section
-            positions = getGridPositions(camera, rows, cols,false).mainGridPositions;
-            gridDimensions = [getBoundingBoxFromPositions(positions)];
-            combinedPositions = positions; 
-            break;
-          default:
-            // Fallback logic
-            break;
-        }}
+  if (!combinedPositions?.length) {
+    return gridDimensions;
+  }
 
-  
-  for(let i = 0; i < combinedPositions.length && i < birds.length; i++){
+  for (let i = 0; i < combinedPositions.length && i < birds.length; i++) {
     const bird = birds[i];
-    bird.blenderData.mesh.rotation.set(0,0,0);
-    const target = combinedPositions[i];
-    unfoldAction(target, bird,camera);
+    bird.blenderData.mesh.rotation.set(0, 0, 0);
+    unfoldAction(combinedPositions[i], bird, camera);
     bird.update();
-}
+  }
   return gridDimensions;
 }
 function unfoldAction(target, bird, camera) {
@@ -256,6 +209,9 @@ export function foldAction(bird){
 
 }
 
+/** Squared velocity below this counts as “arrived” (strict === 0 fails on float noise). */
+const ARRIVED_VEL_EPS_SQ = 1e-6;
+
 export function animate(birds, mixers, camera, setPaperGrid, setGridDimensions, scene) {
   const clock = new THREE.Clock();
 
@@ -280,7 +236,7 @@ export function animate(birds, mixers, camera, setPaperGrid, setGridDimensions, 
 
       for (let i = 0; i < gridBirds.length; i++) {
         const gridBird = gridBirds[i];
-        const hasArrived = gridBird.velocity.lengthSq() === 0
+        const hasArrived = gridBird.velocity.lengthSq() < ARRIVED_VEL_EPS_SQ;
         haveArrived.push(hasArrived);
       }
       if (haveArrived.every(Boolean)) {
@@ -292,7 +248,7 @@ export function animate(birds, mixers, camera, setPaperGrid, setGridDimensions, 
     birds.forEach((surroundingBoids, boid) => {
       switch (boid.state) {
         case "FLOCKING":
-          boid.apply_flocking_behavior(surroundingBoids);
+          boid.applyFlockingBehavior(surroundingBoids);
           boid.update();
           break;
 
@@ -355,25 +311,3 @@ export function getBoundingBoxFromPositions(positions, paperSize = 65) {
   return { x: minX, y: minY, cx, cy, z, width, height };
 }
 
-/**
- * Creates debug dots at the four corners of the bounding box from positions, accounting for paper size and scale.
- * @param {THREE.Scene} scene - The scene to add the debug dots to.
- * @param {THREE.Vector3[]} positions - Array of positions (centers of papers).
- * @param {number} paperSize - The original paper size (default 65)
- * @param {number} scale - The scale applied to the paper mesh (default 20)
- */
-export function createBoundingBoxDebugDots(scene, positions, paperSize = 65, scale = 20) {
-  const bbox = getBoundingBoxFromPositions(positions, paperSize, scale);
-  // Four corners
-  const z = positions[0].z;
-  const corners = [
-    new THREE.Vector3(bbox.x, bbox.y, z), // top-left
-    new THREE.Vector3(bbox.x + bbox.width, bbox.y, z), // top-right
-    new THREE.Vector3(bbox.x, bbox.y + bbox.height, z), // bottom-left
-    new THREE.Vector3(bbox.x + bbox.width, bbox.y + bbox.height, z) // bottom-right
-  ];
-  corners.forEach(corner => {
-    const dot = createDebugDot(corner);
-    scene.add(dot);
-  });
-}

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
@@ -51,13 +52,19 @@ export default class SceneInit {
     this.stats = Stats();
     document.body.appendChild(this.stats.dom);
 
+    // PMREMGenerator environment map for physically correct lighting
+    const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environment = envMap;
+
     // ambient light which is for the whole scene
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
     this.ambientLight.castShadow = true;
     this.scene.add(this.ambientLight);
 
     // directional light - parallel sun rays
-    this.directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    this.directionalLight = new THREE.DirectionalLight(0xff8c42, 1.2);
     // this.directionalLight.castShadow = true;
     this.directionalLight.position.set(0, 32, 64);
     this.scene.add(this.directionalLight);

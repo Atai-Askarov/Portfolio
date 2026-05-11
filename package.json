@@ -9,13 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "hyphen": "^1.14.1",
+    "hyphenation.en-us": "^0.2.1",
     "opentype.js": "^1.3.4",
     "prettier": "^3.6.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.2",
     "three": "^0.138.3",
-    "three-stdlib": "^2.36.0"
+    "three-mesh-ui": "^6.5.4",
+    "three-stdlib": "^2.36.0",
+    "troika-3d-text": "^0.52.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^1.0.7",
