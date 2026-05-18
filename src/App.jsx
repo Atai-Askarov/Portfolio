@@ -156,72 +156,42 @@ function App() {
   }, [windowDimensions]);
 
   useEffect(() => {
-    const sectionConfigs = [
-      { ref: heroSectionRef, section: 'HERO', birdNumber: 12 },
-      { ref: aboutSectionRef, section: 'ABOUT', birdNumber: 12 },
-      { ref: contactSectionRef, section: 'CONTACT', birdNumber: 12 },
-    ];
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const sectionType = entry.target.dataset.section;
-          const birdAmount = parseInt(entry.target.dataset.birdNumber, 10);
-
-          if (entry.isIntersecting) {
-            if (activeSectionRef.current !== sectionType) {
-              setActiveSection(sectionType);
-              birdStateManager.viewPortState = sectionType;
-              birdStateManager.returnSubscribers().forEach((bird) => foldAction(bird));
-              birdStateManager.clearSubscribers();
-              const shuffled = getUniqueRandomIndices(BOID_COUNT, birdAmount);
-              for (let i = 0; i < shuffled.length; i++) {
-                const bird = birdsRef.current?.[shuffled[i]];
-                if (bird) birdStateManager.subscribe(bird);
-              }
-              birdStateManager.setState('GRID_FORMATION');
-            }
-          } else if (activeSectionRef.current === sectionType) {
-            setActiveSection(null);
-            setPaperGrid(false);
-            birdStateManager.setState('FLOCKING');
-            birdStateManager.returnSubscribers().forEach((bird) => foldAction(bird));
-            birdStateManager.clearSubscribers();
-          }
-        }
-      },
-      { root: null, rootMargin: '0px 0px -8% 0px', threshold: 0.65 }
-    );
-
-    sectionConfigs.forEach(({ ref, section, birdNumber }) => {
-      if (ref.current) {
-        ref.current.dataset.section = section;
-        ref.current.dataset.birdNumber = String(birdNumber);
-        observer.observe(ref.current);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     if (grid && sceneRef.current) {
       const scene = sceneRef.current;
-      createFlock(scene, grid, scene.camera, setPaperGrid, setGridDimensionsStable);
+      createFlock(scene, grid, scene.camera, setPaperGrid, setGridDimensionsStable).then(() => {
+        if (birdsRef.current?.length) {
+          // Initial grid formation
+          birdStateManager.setState('GRID_FORMATION');
+          birdStateManager.viewPortState = 'HERO';
+          const initialShuffled = getUniqueRandomIndices(BOID_COUNT, 12);
+          for (let i = 0; i < initialShuffled.length; i++) {
+            const bird = birdsRef.current?.[initialShuffled[i]];
+            if (bird) birdStateManager.subscribe(bird);
+          }
+
+          // Set up the interval to cycle birds
+          const intervalId = setInterval(() => {
+            const currentSubscribers = birdStateManager.returnSubscribers();
+            currentSubscribers.forEach((bird) => foldAction(bird));
+            birdStateManager.clearSubscribers();
+
+            const shuffled = getUniqueRandomIndices(BOID_COUNT, 12);
+            for (let i = 0; i < shuffled.length; i++) {
+              const bird = birdsRef.current?.[shuffled[i]];
+              if (bird) birdStateManager.subscribe(bird);
+            }
+            birdStateManager.viewPortState = 'HERO';
+            birdStateManager.setState('GRID_FORMATION');
+          }, 5000);
+
+          // Cleanup on component unmount
+          return () => {
+            clearInterval(intervalId);
+          };
+        }
+      });
     }
   }, [grid, setGridDimensionsStable]);
-
-  const scrollLayerStyle = {
-    position: 'relative',
-    zIndex: 10,
-    overflowY: 'scroll',
-    height: '100vh',
-    width: '100vw',
-    scrollSnapType: 'y mandatory',
-    scrollbarWidth: 'none',
-  };
-
-  const snapSectionStyle = { height: '100vh', scrollSnapAlign: 'start' };
 
   return (
     <div style={{ position: 'relative', width: '100vw' }}>
@@ -239,35 +209,7 @@ function App() {
         }}
       />
 
-      <NavBar activeSection={activeSection} />
-
-      <div style={scrollLayerStyle}>
-        <section style={snapSectionStyle}>
-          <ScrollDownIndicator />
-        </section>
-
-        <section id="hero" ref={heroSectionRef} style={snapSectionStyle}>
-          <HeroSection
-            onCVClick={handleResumeClick}
-            font={font}
-            visible={paperGrid && activeSection === 'HERO'}
-            scene={sceneRef.current}
-            gridDimensions={gridDimensions}
-            section={activeSection}
-          />
-        </section>
-
-        <section id="about" ref={aboutSectionRef} style={snapSectionStyle}>
-          <AboutSection
-            font={font}
-            visible={paperGrid && activeSection === 'ABOUT'}
-            scene={sceneRef.current}
-            gridDimensions={gridDimensions}
-            section={activeSection}
-          />
-        </section>
-
-      </div>
+      
     </div>
   );
 }

@@ -170,6 +170,7 @@ export function formPaperGrid(camera, birds, rows = 3, cols = 4, scene = null, v
   }
   return gridDimensions;
 }
+
 function unfoldAction(target, bird, camera) {
     if (!target && camera) {
       target = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z);
@@ -177,9 +178,9 @@ function unfoldAction(target, bird, camera) {
     if (bird) {
       
       const freezeDistance = 1;
-      const baseSpeed = 0.8;      // min speed
-      const accelFactor = 0.02;   // how fast speed grows with distance
-      const maxSpeed = 10;
+      const baseSpeed = 0.1; // Slower minimum speed
+      const accelFactor = 0.01; // Less acceleration
+      const maxSpeed = 8; // Slower maximum speed
 
       const distance = bird.position.distanceTo(target);
       const speed = Math.min(maxSpeed, baseSpeed + distance * accelFactor);
@@ -204,9 +205,12 @@ function unfoldAction(target, bird, camera) {
 }
 
 export function foldAction(bird){
-  bird.blenderData.flappingAction.setEffectiveWeight(1);
-  bird.blenderData.foldingAction.setEffectiveWeight(0);
-
+  if (bird) {
+    bird.blenderData.flappingAction.setEffectiveWeight(1);
+    bird.blenderData.foldingAction.setEffectiveWeight(0);
+    bird.blenderData.mesh.scale.set(1,1,1);
+    bird.state = 'FLOCKING';
+  }
 }
 
 /** Squared velocity below this counts as “arrived” (strict === 0 fails on float noise). */
