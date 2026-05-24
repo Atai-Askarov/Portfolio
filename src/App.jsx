@@ -145,7 +145,7 @@ function App() {
   }
 
   useEffect(() => {
-    const FONT_URL = '../fonts/Lugrasimo-Regular.ttf';
+    const FONT_URL = '/fonts/Lugrasimo-Regular.ttf';
     loadFont(FONT_URL).then(setFont);
   }, []);
 

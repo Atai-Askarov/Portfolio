@@ -8,7 +8,7 @@ import { BirdState } from './BirdStates';
 // Pre-load the paper texture once — shared across all boids.
 // MeshBasicMaterial is used so lighting doesn't interfere with the texture.
 const paperTexture = new THREE.TextureLoader().load(
-  './assets/creased_paper.png',
+  '/assets/creased_paper.png',
   (tex) => {
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
@@ -146,7 +146,7 @@ class Boid {
       const gltfLoader = new GLTFLoader();
       const gltf = await new Promise((resolve, reject) => {
         gltfLoader.load(
-          './assets/3d_origami_crane_gltf/one.glb',
+          '/assets/3d_origami_crane_gltf/one.glb',
           (gltfScene) => resolve(gltfScene),
           undefined,
           (error) => reject(error)
