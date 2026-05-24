@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { createGlowText, disposeGlowText } from '../utils/glowTextUtils';
 import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
-import avatarUrl from '../../assets/avatar.png';
+const avatarUrl = '/assets/avatar.png';
 
 const heroContent = {
   title: "Hello, I'm Atai Askarov.",

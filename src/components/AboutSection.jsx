@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { createGlowText, disposeGlowText } from '../utils/glowTextUtils';
 import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
-import avatarUrl from '../../assets/teeth.png';
+const avatarUrl = '/assets/teeth.png';
 
 const aboutContent = {
   title: 'About me',

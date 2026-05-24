@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MathUtils, Vector3 } from 'three';
-import { Sky } from 'three-stdlib';
+import * as THREE from 'three';
 
 import SpatialGrid from './SpatialGrid';
 import Boid from './Boid';
@@ -155,25 +154,16 @@ function App() {
     sceneRef.current = scene;
     setGrid(new SpatialGrid(windowDimensions));
 
-    const sky = new Sky();
-    sky.scale.setScalar(450000);
-    sky.material.uniforms.turbidity.value = 3.8;
-    sky.material.uniforms.rayleigh.value = 1.689;
-    sky.material.uniforms.mieCoefficient.value = 0.073;
-    sky.material.uniforms.mieDirectionalG.value = 0.803;
-    const phi = MathUtils.degToRad(90);
-    const theta = MathUtils.degToRad(-151.9);
-    const sunPosition = new Vector3().setFromSphericalCoords(1, phi, theta);
-    sky.material.uniforms.sunPosition.value.copy(sunPosition);
-    if (scene.renderer) {
-      scene.renderer.toneMappingExposure = 0.1641;
-    }
-    scene.scene.add(sky);
-
+    const bgTexture = new THREE.TextureLoader().load('/assets/office_background.avif');
+    bgTexture.colorSpace = THREE.SRGBColorSpace;
+    scene.scene.background = bgTexture;
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [windowDimensions]);
+    return () => {
+      bgTexture.dispose();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const sectionConfigs = [

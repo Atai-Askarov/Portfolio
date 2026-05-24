@@ -1,8 +1,12 @@
 import { useRef, useEffect } from 'react';
 import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
 
-const modules = import.meta.globEager('../../assets/gallery/*');
-export const galleryImages = Object.values(modules).map((m) => m.default);
+export const galleryImages = [
+  '/assets/gallery/709461FA-2EAC-4861-BF60-FCE86BCA0AC2.jpg',
+  '/assets/gallery/IMG-20260503-WA0029.jpg',
+  '/assets/gallery/IMG_1167.jpg',
+  '/assets/gallery/IMG_20251221_220105_778.jpg',
+];
 
 const btnStyle = {
   background: 'none',
