@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { birdStateManager } from '../birdStateManager';
+import { updateGlowState } from './glowTextUtils';
+import { updatePortraitState } from './glowImageUtils';
 export function findAnimationByName(animations, name) {
   return animations.find((clip) => clip.name === name);
 }
@@ -133,10 +135,18 @@ export function formPaperGrid(camera, birds, rows = 3, cols = 4, scene = null, v
         break;
       }
       case 'ABOUT':
-      case 'CONTACT': {
+      case 'CONTACT':
+      case 'GALLERY': {
         positions = getGridPositions(camera, rows, cols);
         combinedPositions = positions;
         gridDimensions = [getBoundingBoxFromPositions(positions)];
+        break;
+      }
+      case 'NOW': {
+        const grouped = boundingBoxesForGroupedPositions(camera, 4, 15);
+        positions = grouped.positions;
+        combinedPositions = positions;
+        gridDimensions = grouped.gridDimensions;
         break;
       }
       case 'PROJECT': {
@@ -217,8 +227,9 @@ export function animate(birds, mixers, camera, setPaperGrid, setGridDimensions, 
 
   function render() {
     const delta = clock.getDelta();
+    updateGlowState();
+    updatePortraitState();
 
-    // Update animations
     if (mixers.length > 0) {
       for (let i = 0; i < mixers.length; i++) {
         mixers[i].update(delta);

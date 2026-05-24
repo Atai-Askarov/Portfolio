@@ -63,6 +63,30 @@ export default function NavBar({ activeSection }) {
         >
           About
         </a>
+        <a
+          href="#contact"
+          onClick={(e) => goTo(e, 'contact')}
+          style={linkStyle('CONTACT')}
+          aria-current={isActive('CONTACT') ? 'page' : undefined}
+        >
+          Contact
+        </a>
+        <a
+          href="#now"
+          onClick={(e) => goTo(e, 'now')}
+          style={linkStyle('NOW')}
+          aria-current={isActive('NOW') ? 'page' : undefined}
+        >
+          Now
+        </a>
+        <a
+          href="#gallery"
+          onClick={(e) => goTo(e, 'gallery')}
+          style={linkStyle('GALLERY')}
+          aria-current={isActive('GALLERY') ? 'page' : undefined}
+        >
+          Gallery
+        </a>
       </div>
     </nav>
   );

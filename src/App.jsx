@@ -7,6 +7,9 @@ import Boid from './Boid';
 import NavBar from './components/NavBar';
 import HeroSection from './components/HeroSection';
 import AboutSection from './components/AboutSection';
+import ContactSection from './components/ContactSection';
+import GallerySection, { galleryImages } from './components/GallerySection';
+import NowSection from './components/NowSection';
 import ScrollDownIndicator from './components/ScrollDownIndicator';
 import Sidebar from './components/Sidebar';
 
@@ -54,9 +57,11 @@ function App() {
   const birdsRef = useRef(null);
   const activeSectionRef = useRef(null);
 
-  const heroSectionRef = useRef(null);
-  const aboutSectionRef = useRef(null);
+  const heroSectionRef    = useRef(null);
+  const aboutSectionRef   = useRef(null);
   const contactSectionRef = useRef(null);
+  const gallerySectionRef = useRef(null);
+  const nowSectionRef     = useRef(null);
 
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
   const [grid, setGrid] = useState(null);
@@ -64,9 +69,24 @@ function App() {
   const [gridDimensions, setGridDimensions] = useState(null);
   const [font, setFont] = useState();
   const [activeSection, setActiveSection] = useState(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const setGridDimensionsStable = useCallback((next) => {
     setGridDimensions((prev) => (gridDimensionsShallowEqual(prev, next) ? prev : next));
+  }, []);
+
+  const handleGalleryNavigate = useCallback((direction) => {
+    setGalleryIndex(prev => (prev + direction + galleryImages.length) % galleryImages.length);
+    setPaperGrid(false);
+    birdStateManager.returnSubscribers().forEach(bird => foldAction(bird));
+    birdStateManager.setState('FLOCKING');
+    birdStateManager.clearSubscribers();
+    const shuffled = getUniqueRandomIndices(BOID_COUNT, 12);
+    for (let i = 0; i < shuffled.length; i++) {
+      const bird = birdsRef.current?.[shuffled[i]];
+      if (bird) birdStateManager.subscribe(bird);
+    }
+    birdStateManager.setState('GRID_FORMATION');
   }, []);
 
   async function handleResumeClick() {
@@ -126,7 +146,7 @@ function App() {
   }
 
   useEffect(() => {
-    const FONT_URL = '../fonts/MorrisRoman-Black.ttf';
+    const FONT_URL = '../fonts/Lugrasimo-Regular.ttf';
     loadFont(FONT_URL).then(setFont);
   }, []);
 
@@ -157,9 +177,11 @@ function App() {
 
   useEffect(() => {
     const sectionConfigs = [
-      { ref: heroSectionRef, section: 'HERO', birdNumber: 12 },
-      { ref: aboutSectionRef, section: 'ABOUT', birdNumber: 12 },
+      { ref: heroSectionRef,    section: 'HERO',    birdNumber: 12 },
+      { ref: aboutSectionRef,   section: 'ABOUT',   birdNumber: 12 },
       { ref: contactSectionRef, section: 'CONTACT', birdNumber: 12 },
+      { ref: gallerySectionRef, section: 'GALLERY', birdNumber: 12 },
+      { ref: nowSectionRef,     section: 'NOW',     birdNumber: 16 },
     ];
 
     const observer = new IntersectionObserver(
@@ -264,6 +286,35 @@ function App() {
             scene={sceneRef.current}
             gridDimensions={gridDimensions}
             section={activeSection}
+          />
+        </section>
+
+        <section id="contact" ref={contactSectionRef} style={snapSectionStyle}>
+          <ContactSection
+            font={font}
+            visible={paperGrid && activeSection === 'CONTACT'}
+            scene={sceneRef.current}
+            gridDimensions={gridDimensions}
+            section={activeSection}
+          />
+        </section>
+
+        <section id="now" ref={nowSectionRef} style={snapSectionStyle}>
+          <NowSection
+            font={font}
+            visible={paperGrid && activeSection === 'NOW'}
+            scene={sceneRef.current}
+            gridDimensions={gridDimensions}
+          />
+        </section>
+
+        <section id="gallery" ref={gallerySectionRef} style={snapSectionStyle}>
+          <GallerySection
+            visible={paperGrid && activeSection === 'GALLERY'}
+            scene={sceneRef.current}
+            gridDimensions={gridDimensions}
+            galleryIndex={galleryIndex}
+            onNavigate={handleGalleryNavigate}
           />
         </section>
 

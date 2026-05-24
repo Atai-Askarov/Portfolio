@@ -6,6 +6,8 @@ export const viewPortStates = {
   ABOUT: 'ABOUT',
   HERO: 'HERO',
   CONTACT: 'CONTACT',
+  GALLERY: 'GALLERY',
+  NOW: 'NOW',
   DEFAULT: 'DEFAULT',
 };
 

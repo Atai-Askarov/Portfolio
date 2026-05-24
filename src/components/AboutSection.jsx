@@ -1,49 +1,32 @@
 import { useRef, useEffect } from 'react';
-import { applyPlane } from '../utils/planeUtils';
+import { createGlowText, disposeGlowText } from '../utils/glowTextUtils';
+import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
+import avatarUrl from '../../assets/teeth.png';
 
-const aboutContent = [
-  {
-    title: 'About me',
-    description: `Hi there — I'm Atai Askarov, a Full-Stack Developer and Creative Technologist passionate about building meaningful, interactive digital experiences. My work bridges the gap between engineering and design, blending functionality with emotion to create products that are not only powerful, but also deeply engaging.
-
-I specialize in developing scalable web and mobile applications, architecting efficient back-end systems, and crafting immersive 3D environments that tell a story. Whether it's a real-time web app, a visually rich front-end, or a cross-platform mobile experience, I focus on bringing ideas to life through elegant code, thoughtful design, and technical precision.
-
-My toolkit spans technologies like React, Node.js, React Native, and WebGL, along with creative tools such as Three.js and Blender. I enjoy working across the entire stack — from designing data models and cloud infrastructure to animating 3D scenes that respond to user interaction.
-
-Above all, I believe technology should inspire curiosity and connection. Explore my portfolio to see how I merge software engineering, visual storytelling, and user-centered design into cohesive, interactive experiences that push creative and technical boundaries.`,
-  },
-];
-
-const sectionStyle = {
-  zIndex: 10,
-  color: '#fff',
-  textShadow: '0 2px 16px rgba(0,0,0,0.5)',
-  pointerEvents: 'none',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  position: 'relative',
-  width: '100vw',
-  height: '100vh',
+const aboutContent = {
+  title: 'About me',
+  description:
+    "Full-Stack Developer and Creative Technologist. React, Node.js, WebGL, Three.js, Blender. I build things that push creative and technical boundaries.",
 };
 
-export default function AboutSection({
-  font,
-  visible,
-  scene,
-  gridDimensions: gridRect,
-  section,
-}) {
-  const planeRef = useRef([]);
+export default function AboutSection({ font, visible, scene, gridDimensions }) {
+  const meshRef    = useRef(null);
+  const portraitRef = useRef(null);
 
   useEffect(() => {
-    applyPlane(scene, visible, planeRef, gridRect, aboutContent, font, section);
-  }, [scene, visible, gridRect, font, section]);
+    if (visible && !meshRef.current && gridDimensions?.length && scene && font) {
+      meshRef.current    = createGlowText(scene, gridDimensions[0], aboutContent, font, 'right');
+      portraitRef.current = createPortraitMesh(scene, gridDimensions[0], avatarUrl, 'left');
+    } else if (!visible) {
+      if (meshRef.current)    { disposeGlowText(scene, meshRef.current);    meshRef.current    = null; }
+      if (portraitRef.current) { disposePortrait(scene, portraitRef.current); portraitRef.current = null; }
+    }
+  }, [visible, scene, gridDimensions, font]);
 
-  return (
-    <div>
-      {visible && <section style={sectionStyle} />}
-    </div>
-  );
+  useEffect(() => () => {
+    if (meshRef.current    && scene) disposeGlowText(scene, meshRef.current);
+    if (portraitRef.current && scene) disposePortrait(scene, portraitRef.current);
+  }, []);
+
+  return null;
 }
