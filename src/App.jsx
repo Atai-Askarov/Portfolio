@@ -56,6 +56,12 @@ function App() {
   const birdsRef = useRef(null);
   const activeSectionRef = useRef(null);
 
+  const scrollContainerRef = useRef(null);
+  const sectionIndexRef    = useRef(0);
+  const scrollLocked       = useRef(false);
+  const touchStartY        = useRef(0);
+  const SECTION_COUNT      = 6;
+
   const heroSectionRef    = useRef(null);
   const aboutSectionRef   = useRef(null);
   const contactSectionRef = useRef(null);
@@ -73,6 +79,41 @@ function App() {
   const setGridDimensionsStable = useCallback((next) => {
     setGridDimensions((prev) => (gridDimensionsShallowEqual(prev, next) ? prev : next));
   }, []);
+
+  const navigateSection = useCallback((dir) => {
+    if (scrollLocked.current) return;
+    const next = Math.max(0, Math.min(SECTION_COUNT - 1, sectionIndexRef.current + dir));
+    if (next === sectionIndexRef.current) return;
+    sectionIndexRef.current = next;
+    scrollLocked.current = true;
+    scrollContainerRef.current?.scrollTo({ top: next * window.innerHeight, behavior: 'smooth' });
+    setTimeout(() => { scrollLocked.current = false; }, 800);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const onWheel = (e) => { e.preventDefault(); navigateSection(e.deltaY > 0 ? 1 : -1); };
+    const onKeyDown = (e) => {
+      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); navigateSection(1); }
+      if (['ArrowUp', 'PageUp'].includes(e.key))          { e.preventDefault(); navigateSection(-1); }
+    };
+    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchEnd   = (e) => {
+      const dy = touchStartY.current - e.changedTouches[0].clientY;
+      if (Math.abs(dy) > 30) navigateSection(dy > 0 ? 1 : -1);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('keydown', onKeyDown);
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend',   onTouchEnd,   { passive: true });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      window.removeEventListener('keydown', onKeyDown);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend',   onTouchEnd);
+    };
+  }, [navigateSection]);
 
   const handleGalleryNavigate = useCallback((direction) => {
     setGalleryIndex(prev => (prev + direction + galleryImages.length) % galleryImages.length);
@@ -226,18 +267,17 @@ function App() {
   const scrollLayerStyle = {
     position: 'relative',
     zIndex: 10,
-    overflowY: 'scroll',
+    overflowY: 'hidden',
     height: '100vh',
     width: '100vw',
-    scrollSnapType: 'y mandatory',
     scrollbarWidth: 'none',
   };
 
-  const snapSectionStyle = { height: '100vh', scrollSnapAlign: 'start' };
+  const snapSectionStyle = { height: '100vh' };
 
   return (
     <div style={{ position: 'relative', width: '100vw' }}>
-      <Sidebar activeSection={activeSection} />
+      <Sidebar activeSection={activeSection} paperGrid={paperGrid} />
       <canvas
         id="myThreeJsCanvas"
         style={{
@@ -253,7 +293,7 @@ function App() {
 
       <NavBar activeSection={activeSection} />
 
-      <div style={scrollLayerStyle}>
+      <div ref={scrollContainerRef} style={scrollLayerStyle}>
         <section style={snapSectionStyle}>
           <ScrollDownIndicator />
         </section>

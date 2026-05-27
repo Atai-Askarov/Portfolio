@@ -6,7 +6,7 @@ const avatarUrl = '/assets/teeth.png';
 const aboutContent = {
   title: 'About me',
   description:
-    "I'm a developer with a thing for craft. I care about how things feel as much as how they work — whether that's a 3D scene, a UI, or a piece of code.",
+    "I'm a developer who cares about craft — whether that's a clean UI, a heavy pull up, or a bass line that actually grooves. When I'm not at my desk I'm usually running or at the gym.",
 };
 
 export default function AboutSection({ font, visible, scene, gridDimensions }) {

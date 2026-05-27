@@ -2,8 +2,8 @@ import { useRef, useEffect } from 'react';
 import { createGlowText, disposeGlowText } from '../utils/glowTextUtils';
 
 const contactContent = {
-  title: 'Say hello',
-  description: 'Whether it\'s work, a collab, or just something you want to share',
+  title: 'Come! Say hi!',
+  description: 'Whether it\'s work, a collab, or just something you want to share. Hit me up at one of these <-',
 };
 
 export default function ContactSection({ font, visible, scene, gridDimensions }) {

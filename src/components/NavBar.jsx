@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 
 export default function NavBar({ activeSection }) {
+  const videoRef = useRef(null);
+  const handleLogoHover = () => {
+    if (videoRef.current) { videoRef.current.currentTime = 0; videoRef.current.play(); }
+  };
   const linkBase = { color: '#fff', margin: '0 16px', textDecoration: 'none' };
-  const [hover, setHover] = useState(false);
   const isActive = (s) => activeSection === s;
   const linkStyle = (s) =>
     isActive(s)
@@ -33,19 +36,15 @@ export default function NavBar({ activeSection }) {
         zIndex: 12,
       }}
     >
-      <div
-        style={{ transform: hover ? 'translateX(50px)' : undefined }}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
-        <video
-          src="/assets/logo1_enhanced.mp4"
-          autoPlay
-          muted
-          playsInline
-          style={{ height: '40px', borderRadius: '8px', zIndex: 13 }}
-        />
-      </div>
+      <video
+        ref={videoRef}
+        src="/assets/logo1_enhanced.mp4"
+        autoPlay
+        muted
+        playsInline
+        onMouseEnter={handleLogoHover}
+        style={{ height: '40px', borderRadius: '8px', zIndex: 13, cursor: 'pointer' }}
+      />
       <div>
         <a
           href="#hero"
