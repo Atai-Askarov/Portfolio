@@ -1,12 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
 
-export const galleryImages = [
-  '/assets/gallery/709461FA-2EAC-4861-BF60-FCE86BCA0AC2.jpg',
-  '/assets/gallery/IMG-20260503-WA0029.jpg',
-  '/assets/gallery/IMG_1167.jpg',
-  '/assets/gallery/IMG_20251221_220105_778.jpg',
-];
+const imageModules = import.meta.globEager('../assets/gallery/*.{jpg,jpeg,png,avif,webp,JPG,JPEG,PNG,AVIF,WEBP}');
+export const galleryImages = Object.values(imageModules).map(m => m.default);
 
 const btnStyle = {
   background: 'none',
@@ -19,7 +15,7 @@ const btnStyle = {
   transition: 'color 0.2s',
 };
 
-export default function GallerySection({ visible, scene, gridDimensions, galleryIndex, onNavigate }) {
+export default function GallerySection({ visible, active, scene, gridDimensions, galleryIndex, onNavigate }) {
   const portraitRef = useRef(null);
 
   useEffect(() => {
@@ -37,18 +33,18 @@ export default function GallerySection({ visible, scene, gridDimensions, gallery
 
   // Keyboard navigation
   useEffect(() => {
-    if (!visible) return;
+    if (!active) return;
     const onKey = (e) => {
       if (e.key === 'ArrowLeft')  onNavigate(-1);
       if (e.key === 'ArrowRight') onNavigate(1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, onNavigate]);
+  }, [active, onNavigate]);
 
   // Swipe navigation
   useEffect(() => {
-    if (!visible) return;
+    if (!active) return;
     let startX = 0;
     const onTouchStart = (e) => { startX = e.touches[0].clientX; };
     const onTouchEnd   = (e) => {
@@ -61,9 +57,9 @@ export default function GallerySection({ visible, scene, gridDimensions, gallery
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchend',   onTouchEnd);
     };
-  }, [visible, onNavigate]);
+  }, [active, onNavigate]);
 
-  if (!visible) return null;
+  if (!active) return null;
 
   return (
     <div style={{

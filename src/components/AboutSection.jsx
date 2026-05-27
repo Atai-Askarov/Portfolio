@@ -6,7 +6,7 @@ const avatarUrl = '/assets/teeth.png';
 const aboutContent = {
   title: 'About me',
   description:
-    "Full-Stack Developer and Creative Technologist. React, Node.js, WebGL, Three.js, Blender. I build things that push creative and technical boundaries.",
+    "I'm a developer with a thing for craft. I care about how things feel as much as how they work — whether that's a 3D scene, a UI, or a piece of code.",
 };
 
 export default function AboutSection({ font, visible, scene, gridDimensions }) {

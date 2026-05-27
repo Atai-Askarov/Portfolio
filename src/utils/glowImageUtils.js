@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const REVEAL_DELAY    = 0.0;
-const REVEAL_DURATION = 2.2;
+const REVEAL_DURATION = 1.0;
 
 const activePortraits = new Set();
 
@@ -50,11 +50,14 @@ const fragmentShader = /* glsl */`
     float alpha = mix(inkAlpha, tex.a,    colorT);
     vec3  color = mix(inkColor, tex.rgb,  colorT);
 
+    // Lift shadows on the revealed photo without blowing out highlights
+    color = mix(color, pow(max(color, vec3(0.0)), vec3(0.82)), colorT);
+
     gl_FragColor = vec4(color, alpha);
   }
 `;
 
-export function createPortraitMesh(scene, grid, imagePath, side = 'right') {
+export function createPortraitMesh(scene, grid, imagePath, side = 'right', yOffsetFraction = 0) {
   if (!scene || !grid) return null;
 
   const material = new THREE.ShaderMaterial({
@@ -75,18 +78,33 @@ export function createPortraitMesh(scene, grid, imagePath, side = 'right') {
   mesh.userData.startTime = performance.now() * 0.001;
   mesh.userData.disposed  = false;
 
-  new THREE.TextureLoader().load(imagePath, (texture) => {
-    if (mesh.userData.disposed) { texture.dispose(); return; }
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.minFilter = THREE.LinearFilter;
-    if (scene.renderer?.capabilities) {
-      texture.anisotropy = scene.renderer.capabilities.getMaxAnisotropy();
-    }
+  const img = new Image();
+  img.onload = () => {
+    if (mesh.userData.disposed) return;
+
+    const MAX_PX = 512;
+    const scale  = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+    const cw = Math.round(img.width  * scale);
+    const ch = Math.round(img.height * scale);
+    const offscreen = document.createElement('canvas');
+    offscreen.width  = cw;
+    offscreen.height = ch;
+    offscreen.getContext('2d').drawImage(img, 0, 0, cw, ch);
+
+    const texture = new THREE.CanvasTexture(offscreen);
+    texture.colorSpace    = THREE.SRGBColorSpace;
+    texture.generateMipmaps = true;
+    texture.minFilter     = THREE.LinearMipmapLinearFilter;
+    texture.anisotropy    = 2;
     material.uniforms.uTexture.value = texture;
 
-    const imgAspect = texture.image.width / texture.image.height;
-    const maxH = side === 'center' ? grid.height * 0.88 : grid.height * 0.92;
-    const maxW = side === 'center' ? grid.width  * 0.80 : grid.width  * 0.38;
+    const imgAspect = cw / ch;
+    const maxH = yOffsetFraction !== 0
+      ? grid.height * 0.55
+      : side === 'center' ? grid.height * 0.88 : grid.height * 0.92;
+    const maxW = yOffsetFraction !== 0
+      ? grid.width  * 0.78
+      : side === 'center' ? grid.width  * 0.80 : grid.width  * 0.38;
     let pH = maxH;
     let pW = pH * imgAspect;
     if (pW > maxW) { pW = maxW; pH = pW / imgAspect; }
@@ -99,8 +117,10 @@ export function createPortraitMesh(scene, grid, imagePath, side = 'right') {
       : side === 'center'
       ? grid.cx
       : (grid.cx + grid.width / 2) - pW / 2 - grid.width * 0.02;
-    mesh.position.set(x, grid.cy, grid.z + 0.5);
-  });
+    const y = grid.cy + grid.height * yOffsetFraction;
+    mesh.position.set(x, y, grid.z + 0.5);
+  };
+  img.src = imagePath;
 
   scene.scene.add(mesh);
   activePortraits.add(mesh);

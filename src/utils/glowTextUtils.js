@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const CANVAS_SCALE    = 6;
-const REVEAL_DURATION = 2.0;
+const REVEAL_DURATION = 0.8;
 
 export const glowTimeUniform = { value: 0.0 };
 const activeMeshes = new Set();
@@ -92,22 +92,37 @@ function buildTextMask(title, description, font, gridWidth, gridHeight, layout =
   const topReserved = ch * 0.35; // fraction of canvas reserved for text in 'top' layout
 
   const LINE_SCALE = 1.5;
-  const titleSize  = Math.round(0.055 * cw);
-  const descSize   = description ? Math.round(titleSize * 0.855) : 0;
-  const titleLineH = titleSize * LINE_SCALE;
-  const descLineH  = descSize  * LINE_SCALE;
-  const gap        = description ? descLineH : 0; // one blank desc-line between blocks
+  const maxH = layout === 'top' ? ch * 0.35 : ch * 0.88;
+
+  let titleSize  = Math.round(0.055 * cw);
+  let descSize   = description ? Math.round(titleSize * 0.855) : 0;
+  let titleLines = wrapWords(title, innerW, font, titleSize);
+  let descLines  = description ? wrapWords(description, innerW, font, descSize) : [];
+  let titleLineH = titleSize * LINE_SCALE;
+  let descLineH  = descSize  * LINE_SCALE;
+  let gap        = description ? descLineH : 0;
+  let totalTextH = titleLines.length * titleLineH +
+    (description && descLines.length ? gap + descLines.length * descLineH : 0);
+
+  // Scale fonts down proportionally if text overflows the available height
+  if (totalTextH > maxH) {
+    const scale = maxH / totalTextH;
+    titleSize  = Math.round(titleSize * scale);
+    descSize   = description ? Math.round(titleSize * 0.855) : 0;
+    titleLines = wrapWords(title, innerW, font, titleSize);
+    descLines  = description ? wrapWords(description, innerW, font, descSize) : [];
+    titleLineH = titleSize * LINE_SCALE;
+    descLineH  = descSize  * LINE_SCALE;
+    gap        = description ? descLineH : 0;
+    totalTextH = titleLines.length * titleLineH +
+      (description && descLines.length ? gap + descLines.length * descLineH : 0);
+  }
 
   const titleAsc = (font.ascender / font.unitsPerEm) * titleSize;
   const descAsc  = description ? (font.ascender / font.unitsPerEm) * descSize : 0;
 
-  const titleLines = wrapWords(title, innerW, font, titleSize);
-  const descLines  = description ? wrapWords(description, innerW, font, descSize) : [];
-
-  const totalTextH = titleLines.length * titleLineH +
-    (description && descLines.length ? gap + descLines.length * descLineH : 0);
   const blockTop = layout === 'top'
-    ? (topReserved - totalTextH) / 2
+    ? (ch * 0.35 - totalTextH) / 2
     : (ch - totalTextH) / 2;
   const titleY0  = blockTop + titleAsc;
   const descY0   = blockTop + titleLines.length * titleLineH + (description ? gap : 0) + descAsc;
@@ -130,9 +145,17 @@ function buildTextMask(title, description, font, gridWidth, gridHeight, layout =
     }
   }
 
-  drawLines(titleLines, titleSize, titleLineH, titleY0, '#1a0e08');
-  if (descLines.length)
-    drawLines(descLines, descSize, descLineH, descY0, '#2a1a10');
+  if (layout === 'top' && descLines.length) {
+    // Label (small) above, main content (big) below
+    const labelY0 = blockTop + descAsc;
+    const contentY0 = blockTop + descLines.length * descLineH + gap + titleAsc;
+    drawLines(descLines, descSize, descLineH, labelY0,   '#5a4a3a');
+    drawLines(titleLines, titleSize, titleLineH, contentY0, '#1a0e08');
+  } else {
+    drawLines(titleLines, titleSize, titleLineH, titleY0, '#1a0e08');
+    if (descLines.length)
+      drawLines(descLines, descSize, descLineH, descY0, '#2a1a10');
+  }
 
   return canvas;
 }

@@ -4,9 +4,9 @@ import { createPortraitMesh, disposePortrait } from '../utils/glowImageUtils';
 const avatarUrl = '/assets/avatar.png';
 
 const heroContent = {
-  title: "Hello, I'm Atai Askarov.",
+  title: "Hi, I'm Atai.",
   description:
-    "Developer and artist. I build digital spaces that are both beautiful and meaningful.",
+    "I make things — digital, visual, sometimes weird. This is where I put them.",
 };
 
 export default function HeroSection({ font, visible, scene, gridDimensions }) {

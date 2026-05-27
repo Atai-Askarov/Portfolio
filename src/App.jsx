@@ -169,9 +169,9 @@ function App() {
     const sectionConfigs = [
       { ref: heroSectionRef,    section: 'HERO',    birdNumber: 12 },
       { ref: aboutSectionRef,   section: 'ABOUT',   birdNumber: 12 },
+      { ref: nowSectionRef,     section: 'NOW',     birdNumber: 16 },
       { ref: contactSectionRef, section: 'CONTACT', birdNumber: 12 },
       { ref: gallerySectionRef, section: 'GALLERY', birdNumber: 12 },
-      { ref: nowSectionRef,     section: 'NOW',     birdNumber: 16 },
     ];
 
     const observer = new IntersectionObserver(
@@ -237,7 +237,7 @@ function App() {
 
   return (
     <div style={{ position: 'relative', width: '100vw' }}>
-      <Sidebar />
+      <Sidebar activeSection={activeSection} />
       <canvas
         id="myThreeJsCanvas"
         style={{
@@ -279,6 +279,15 @@ function App() {
           />
         </section>
 
+        <section id="now" ref={nowSectionRef} style={snapSectionStyle}>
+          <NowSection
+            font={font}
+            visible={paperGrid && activeSection === 'NOW'}
+            scene={sceneRef.current}
+            gridDimensions={gridDimensions}
+          />
+        </section>
+
         <section id="contact" ref={contactSectionRef} style={snapSectionStyle}>
           <ContactSection
             font={font}
@@ -289,18 +298,10 @@ function App() {
           />
         </section>
 
-        <section id="now" ref={nowSectionRef} style={snapSectionStyle}>
-          <NowSection
-            font={font}
-            visible={paperGrid && activeSection === 'NOW'}
-            scene={sceneRef.current}
-            gridDimensions={gridDimensions}
-          />
-        </section>
-
         <section id="gallery" ref={gallerySectionRef} style={snapSectionStyle}>
           <GallerySection
             visible={paperGrid && activeSection === 'GALLERY'}
+            active={activeSection === 'GALLERY'}
             scene={sceneRef.current}
             gridDimensions={gridDimensions}
             galleryIndex={galleryIndex}
